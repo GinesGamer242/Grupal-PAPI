@@ -19,7 +19,7 @@ if (empty($_SESSION['cart']))
  * Map shops → IA checkout endpoints
  */
 $shops = [
-    'camping' => 'http://localhost/camping_shop/api/checkout.php',
+    'camping' => 'http://localhost/PAPI/camping_shop/api/checkout.php',
     // AÑADIR OTRAS TIENDAS
 ];
 
