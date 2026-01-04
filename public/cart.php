@@ -1,8 +1,9 @@
 <?php
 
+require __DIR__ . '/../config/session.php';
 require __DIR__ . '/../includes/header.php';
 
-if (!isset($_SESSION['user']))
+if (empty($_SESSION['user_id']))
 {
     header("Location: login.php");
     exit;

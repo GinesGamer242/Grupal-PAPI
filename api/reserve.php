@@ -3,12 +3,6 @@
 require __DIR__ . '/../config/session.php';
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['user']))
-{
-    echo json_encode(['error' => 'Not authenticated']);
-    exit;
-}
-
 $data = json_decode(file_get_contents("php://input"), true);
 
 if (
@@ -26,9 +20,6 @@ $shop = $data['shop'];
 $productId = (int)$data['product_id'];
 $quantity = (int)$data['quantity'];
 
-/*
- * Map of shops → IA endpoints
- */
 $shops = [
     'camping' => 'http://localhost/camping_shop/api/reserve.php',
     // LAS OTRAS TIENDAS

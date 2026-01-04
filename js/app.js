@@ -27,7 +27,8 @@ function applyFilters()
     let filtered = [...allProducts];
 
     const maxPrice = parseFloat(maxPriceEl.value);
-    if (!isNaN(maxPrice)) {
+    if (!isNaN(maxPrice))
+    {
         filtered = filtered.filter(p => p.price <= maxPrice);
     }
 
@@ -49,21 +50,39 @@ function renderResults(products)
 
     products.forEach(p => {
         resultsDiv.innerHTML += `
-            <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
-                <strong>${p.name}</strong><br>
-                ${p.image ? `<img src="${p.image}" style="max-width:150px;"><br>` : ''}
-                ${p.description ?? ''}<br>
+            <div style="
+            border:1px solid #ccc;
+            padding:10px;
+            margin-bottom:10px;
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            ">
+            <div style="flex:1; padding-right:15px;">
+                <strong>${p.name}</strong><br><br>
+
+                ${p.description ?? ''}<br><br>
+
                 <em>Category:</em> ${p.category}<br>
-                <em>Shop:</em> ${p.shop}<br>
+                <em>Shop:</em> ${p.shop}<br><br>
+
                 <strong>${p.price} €</strong><br><br>
 
-                <a href="item.php?source=${p.shop}&id=${p.product_id}">
+                <a href="item.php?shop=${p.shop}&product_id=${p.product_id}">
                     View details
                 </a>
                 <br><br>
+
                 <button onclick="addToCart('${p.shop}', ${p.product_id})">
                     Add to cart
                 </button>
+            </div>
+
+            ${p.image ? `
+                <div style="min-width:220px; text-align:right;">
+                    <img src="${p.image}" style="max-width:220px; height:auto;">
+                </div>
+            ` : ''}
             </div>
         `;
     });
@@ -78,10 +97,11 @@ function addToCart(source, productId)
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-            source: source,
+            shop: source,
             product_id: productId,
             quantity: 1
-        })
+        }),
+        credentials: 'same-origin'
     })
     .then(r => r.json())
     .then(res => {

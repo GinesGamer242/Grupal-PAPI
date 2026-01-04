@@ -3,7 +3,7 @@ require __DIR__ . '/../config/session.php';
 header('Content-Type: application/json');
 
 $shops = [
-    'camping' => 'http://localhost/camping_shop/api/search.php'
+    'camping' => 'http://localhost/PAPI/camping_shop/api/search.php'
     // añadir más IAs aquí
 ];
 

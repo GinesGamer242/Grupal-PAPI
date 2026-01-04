@@ -9,7 +9,7 @@ require __DIR__ . '/../config/session.php';
 <head>
     <meta charset="UTF-8">
     <title>MSE Shop</title>
-    <script src="/js/app.js" defer></script>
+    <script src="../js/app.js" defer></script>
 </head>
 <body>
 

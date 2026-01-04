@@ -1,6 +1,7 @@
 <?php
 
 require __DIR__ . '/../config/conn.php';
+require __DIR__ . '/../config/session.php';
 require __DIR__ . '/../includes/header.php';
 
 $msg = '';
@@ -22,20 +23,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         $hash = password_hash($pass, PASSWORD_DEFAULT);
         $token = bin2hex(random_bytes(32));
 
-        $pdo->prepare("
-            INSERT INTO users (email, password_hash, is_active)
-            VALUES (?, ?, 0)
-        ")->execute([$email, $hash]);
+        $pdo->beginTransaction();
 
-        $uid = $pdo->lastInsertId();
+        try {
+            $pdo->prepare("
+                INSERT INTO users (email, password_hash, is_active)
+                VALUES (?, ?, 0)
+            ")->execute([$email, $hash]);
 
-        $pdo->prepare("
-            INSERT INTO activation_tokens (user_id, token, expires)
-            VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 DAY))
-        ")->execute([$uid, $token]);
+            $uid = $pdo->lastInsertId();
 
-        $msg = "Account created. Activation required.";
-        // aquí iría el mail real
+            $pdo->prepare("
+                INSERT INTO activation_tokens (user_id, token, expires)
+                VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 DAY))
+            ")->execute([$uid, $token]);
+
+            $pdo->commit();
+
+            $activationLink =
+                "http://localhost/PAPI/GA_GinesLuciaIrene/Grupal-PAPI/public/activate.php?token=$token";
+
+            $msg = "Account created. Activate via email:<br><a href='$activationLink'>$activationLink</a>";
+
+            // aquí luego irá mail()
+        }
+        catch (Exception $e) {
+            $pdo->rollBack();
+            $msg = "Registration failed.";
+        }
     }
 }
 
