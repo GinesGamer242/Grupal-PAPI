@@ -17,8 +17,8 @@ if (empty($_SESSION['cart']))
 
 $shops = [
     'camping' => '../IAs/camping_shop/api/checkout.php',
-    'makeup' => '../IAs/makeup_shop/api/checkout.php'
-    'florist' => '../IAs/florist_shop/api/buy.php'
+    'makeup' => '../IAs/makeup_shop/api/checkout.php',
+    'florist' => '../IAs/florist_shop/api/buy.php',
 ];
 
 /*

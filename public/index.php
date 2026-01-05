@@ -23,7 +23,26 @@ if (empty($_SESSION['user_id']))
         Max price:
         <input type="number" id="maxPrice" onchange="applyFilters()">
     </label>
+
+    &nbsp;&nbsp;
+
+    <label>
+        Category:
+        <select id="categoryFilter" onchange="applyFilters()">
+            <option value="">All</option>
+        </select>
+    </label>
+
+    &nbsp;&nbsp;
+
+    <label>
+        Shop:
+        <select id="shopFilter" onchange="applyFilters()">
+            <option value="">All</option>
+        </select>
+    </label>
 </div>
+
 
 <hr>
 
@@ -33,6 +52,8 @@ if (empty($_SESSION['user_id']))
 </div>
 
 <hr>
+
+
 
 <h3>Cart</h3>
 <div id="cart">
