@@ -21,6 +21,8 @@ if (empty($_SESSION['cart']))
 $shops = [
     'camping' => '../AIs/camping_shop/api/checkout.php',
     'makeup' => '../AIs/makeup_shop/api/checkout.php'
+    'florist' => '../AIs/florist_shop/api/buy.php',
+
     // AÑADIR OTRAS TIENDAS
 ];
 

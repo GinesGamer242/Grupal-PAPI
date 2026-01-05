@@ -17,6 +17,7 @@ $mseUserId = $_SESSION['user']['id'];
 $shops = [
     'camping' => '../AIs/camping_shop/api/orders.php',
     'makeup' => '../AIs/makeup_shop/api/orders.php',
+    'florist' => '../AIs/florist_shop/api/orders.php',
     // AÑADIR OTRAS TIENDAS
 ];
 

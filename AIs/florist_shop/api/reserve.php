@@ -34,10 +34,20 @@ try {
     $stmt->execute([$qty, $itemId]);
 
     $pdo->commit();
-    echo json_encode(["ok" => true]);
+    //echo json_encode(["ok" => true]);
+    echo json_encode([
+        "status" => "ok"
+    ]);
 
 } catch (Exception $e) {
     $pdo->rollBack();
+    /*http_response_code(400);
+    echo json_encode(["error" => $e->getMessage()]);*/
     http_response_code(400);
-    echo json_encode(["error" => $e->getMessage()]);
+    echo json_encode([
+        "error" => "Not enough stock",
+        "details" => $e->getMessage()
+    ]);
+
 }
+?>

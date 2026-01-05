@@ -67,14 +67,25 @@ try {
 
     $pdo->commit();
 
-    echo json_encode([
+    /*echo json_encode([
         "ok" => true,
         "order_id" => $orderId
+    ]);*/
+    echo json_encode([
+        "id" => (int)$orderId
     ]);
+
 
 } catch (Exception $e) {
     $pdo->rollBack();
+    /*http_response_code(500);
+    echo json_encode(["error" => $e->getMessage()]);*/
+    // ERROR
     http_response_code(500);
-    echo json_encode(["error" => $e->getMessage()]);
+    echo json_encode([
+        "error" => "Order failed",
+        "details" => $e->getMessage()
+    ]);
+
 }
 ?>

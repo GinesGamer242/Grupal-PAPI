@@ -2,7 +2,6 @@
 
 require __DIR__ . '/../config/conn.php';
 require __DIR__ . '/../config/session.php';
-require __DIR__ . '/../includes/header.php';
 
 $msg = '';
 
@@ -40,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
 
             $pdo->commit();
 
-            $activationLink =
-                "http://localhost/PAPI/GA_GinesLuciaIrene/Grupal-PAPI/public/activate.php?token=$token";
+            //$activationLink = "http://localhost/PAPI/GA_GinesLuciaIrene/Grupal-PAPI/public/activate.php?token=$token";
+              $activationLink = "http://localhost/PAPI/Grupal-PAPI/public/activate.php?token=$token";
 
             $msg = "Account created. Activate via email:<br><a href='$activationLink'>$activationLink</a>";
 
@@ -53,12 +52,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         }
     }
 }
+require __DIR__ . '/../includes/header.php';
 
 ?>
 
 <h2>Register</h2>
-<p><?= htmlspecialchars($msg) ?></p>
 
+<p><?= $msg ?></p>
 <form method="post">
     <label>Email <input name="email" required></label><br>
     <label>Password <input type="password" name="password" required></label><br>

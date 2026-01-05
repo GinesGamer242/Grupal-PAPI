@@ -3,8 +3,9 @@ require __DIR__ . '/../config/session.php';
 header('Content-Type: application/json');
 
 $shops = [
-    'camping' => '../AIs/camping_shop/api/checkout.php',
+    'camping' => '../AIs/camping_shop/api/search.php',
     'makeup' => '../AIs/makeup_shop/api/search.php',
+    'florist' => '../AIs/florist_shop/api/search.php',
     // añadir más IAs aquí
 ];
 
