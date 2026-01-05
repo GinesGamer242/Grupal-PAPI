@@ -21,11 +21,9 @@ $productId = (int)$data['product_id'];
 $quantity = (int)$data['quantity'];
 
 $shops = [
-    'camping' => '../AIs/camping_shop/api/reserve.php',
-    'makeup' => '../AIs/makeup_shop/api/reserve.php',
-    'florist' => '../AIs/florist_shop/api/reserve.php',
-
-    // LAS OTRAS TIENDAS
+    'camping' => '../IAs/camping_shop/api/reserve.php',
+    'makeup' => '../IAs/makeup_shop/api/reserve.php',
+    'florist' => '../IAs/florist_shop/api/reserve.php'
 ];
 
 if (!isset($shops[$shop]))

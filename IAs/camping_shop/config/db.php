@@ -8,7 +8,7 @@ return (function()
         'dbname' => 'camping_shop',
         'user' => 'root',
         'pass' => '',
-        'base_url' => '/PAPI/camping_shop/public'
+        'base_url' => '/PAPI/Grupal-PAPI/camping_shop/public'
     ];
 })();
 

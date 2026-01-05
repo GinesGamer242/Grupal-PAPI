@@ -15,10 +15,9 @@ $mseUserId = $_SESSION['user']['id'];
  * Map shops → IA orders endpoints
  */
 $shops = [
-    'camping' => '../AIs/camping_shop/api/orders.php',
-    'makeup' => '../AIs/makeup_shop/api/orders.php',
-    'florist' => '../AIs/florist_shop/api/orders.php',
-    // AÑADIR OTRAS TIENDAS
+    'camping' => '../IAs/camping_shop/api/orders.php',
+    'makeup' => '../IAs/makeup_shop/api/orders.php',
+    'florist' => '../IAs/florist_shop/api/orders.php'
 ];
 
 $allOrders = [];

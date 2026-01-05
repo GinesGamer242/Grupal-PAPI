@@ -11,7 +11,7 @@ let cart = [];
 ========================= */
 function search()
 {
-    fetch('../api/search.php?q=' + encodeURIComponent(qInput.value))
+    fetch('https:((/api/search.php?q=' + encodeURIComponent(qInput.value))
         .then(r => r.json())
         .then(data => {
             allProducts = data;

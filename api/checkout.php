@@ -15,15 +15,10 @@ if (empty($_SESSION['cart']))
     exit;
 }
 
-/*
- * Map shops → IA checkout endpoints
- */
 $shops = [
-    'camping' => '../AIs/camping_shop/api/checkout.php',
-    'makeup' => '../AIs/makeup_shop/api/checkout.php'
-    'florist' => '../AIs/florist_shop/api/buy.php',
-
-    // AÑADIR OTRAS TIENDAS
+    'camping' => '../IAs/camping_shop/api/checkout.php',
+    'makeup' => '../IAs/makeup_shop/api/checkout.php'
+    'florist' => '../IAs/florist_shop/api/buy.php'
 ];
 
 /*

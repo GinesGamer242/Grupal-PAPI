@@ -1,12 +1,12 @@
 <?php
+
 require __DIR__ . '/../config/session.php';
 header('Content-Type: application/json');
 
 $shops = [
-    'camping' => '../AIs/camping_shop/api/search.php',
-    'makeup' => '../AIs/makeup_shop/api/search.php',
-    'florist' => '../AIs/florist_shop/api/search.php',
-    // añadir más IAs aquí
+    'camping' => 'http://localhost/PAPI/Grupal-PAPI/IAs/camping_shop/api/search.php',
+    //'makeup' => '../IAs/makeup_shop/api/search.php',
+    //'florist' => '../IAs/florist_shop/api/search.php'
 ];
 
 /*

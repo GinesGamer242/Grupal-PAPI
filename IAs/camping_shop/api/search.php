@@ -19,7 +19,7 @@ $products = [];
 foreach ($stmt as $row)
 {
     $cleanPath = str_replace('../', '', $row['image_path']);
-    $image = 'http://localhost/PAPI/camping_shop/' . $cleanPath;
+    $image = 'http://localhost/PAPI/Grupal-PAPI/camping_shop/' . $cleanPath;
     
     $products[] = [
         'shop' => 'camping',
