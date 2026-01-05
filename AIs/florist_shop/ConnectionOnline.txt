@@ -1,0 +1,5 @@
+I tried uploading and running the project on InfinityFree, but I've had some issues with the online functionality.
+
+Although I uploaded all the files correctly and the activation emails are being sent, when I try to log in with a registered user, the system gives an error and doesn't work like it does locally.
+
+iflorezindividualtaskii.infinityfreeapp.com
