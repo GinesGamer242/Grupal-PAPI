@@ -21,7 +21,8 @@ $productId = (int)$data['product_id'];
 $quantity = (int)$data['quantity'];
 
 $shops = [
-    'camping' => 'http://localhost/PAPI/camping_shop/api/reserve.php',
+    'camping' => '../AIs/camping_shop/api/reserve.php',
+    'makeup' => '../AIs/makeup_shop/api/reserve.php',
     // LAS OTRAS TIENDAS
 ];
 

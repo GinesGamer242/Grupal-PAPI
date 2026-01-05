@@ -4,6 +4,7 @@ header('Content-Type: application/json');
 
 $shops = [
     'camping' => '../AIs/camping_shop/api/checkout.php',
+    'makeup' => '../AIs/makeup_shop/api/search.php',
     // añadir más IAs aquí
 ];
 
