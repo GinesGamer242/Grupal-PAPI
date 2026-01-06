@@ -11,9 +11,6 @@ if (!isset($_SESSION['user']))
 
 $mseUserId = $_SESSION['user']['id'];
 
-/*
- * Map shops → IA orders endpoints
- */
 $shops = [
     'camping' => '../IAs/camping_shop/api/orders.php',
     'makeup' => '../IAs/makeup_shop/api/orders.php',

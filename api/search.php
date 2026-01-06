@@ -6,8 +6,8 @@ header('Content-Type: application/json');
 
 // URLs ABSOLUTAS a las IAs
 $shops = [
-    //'camping' => 'http://localhost/PAPI/Grupal-PAPI/IAs/camping_shop/api/search.php',
-    //'makeup'  => 'http://localhost/PAPI/Grupal-PAPI/IAs/makeup_shop/api/search.php',
+    'camping' => 'http://localhost/PAPI/Grupal-PAPI/IAs/camping_shop/api/search.php',
+    'makeup'  => 'http://localhost/PAPI/Grupal-PAPI/IAs/makeup_shop/api/search.php',
     'florist' => 'http://localhost/PAPI/Grupal-PAPI/IAs/florist_shop/api/search.php'
 ];
 

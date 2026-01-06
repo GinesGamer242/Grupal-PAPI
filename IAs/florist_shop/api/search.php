@@ -27,7 +27,7 @@ foreach ($rows as $r) {
     $result[] = [
         "product_id"  => (int)$r['id'],
         "name"        => $r['name'],
-        "description" => $r['description'],
+        "description" => $r['image'],
         "price"       => (float)$r['price'],
         "category"    => $r['category'],
         "image"       => $r['image'] ?? ""
