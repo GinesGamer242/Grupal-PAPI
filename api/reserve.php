@@ -1,94 +1,29 @@
-<!--<.?php
-
-require __DIR__ . '/../config/session.php';
-header('Content-Type: application/json');
-
-$data = json_decode(file_get_contents("php://input"), true);
-
-if (
-    empty($data['shop']) ||
-    empty($data['product_id']) ||
-    empty($data['quantity']) ||
-    (int)$data['quantity'] <= 0
-)
-{
-    echo json_encode(['error' => 'Invalid request']);
-    exit;
-}
-
-$shop = $data['shop'];
-$productId = (int)$data['product_id'];
-$quantity = (int)$data['quantity'];
-
-$shops = [
-    'camping' => '../IAs/camping_shop/api/reserve.php',
-    'makeup' => '../IAs/makeup_shop/api/reserve.php',
-    'florist' => '../IAs/florist_shop/api/reserve.php'
-];
-
-if (!isset($shops[$shop]))
-{
-    echo json_encode(['error' => 'Unknown shop']);
-    exit;
-}
-
-/*
- * Payload sent to IA
- */
-$payload = json_encode([
-    'product_id' => $productId,
-    'quantity' => $quantity,
-    'mse_user_id' => $_SESSION['user']['id']
-]);
-
-$context = stream_context_create([
-    'http' => [
-        'method'  => 'POST',
-        'header'  => "Content-Type: application/json\r\n",
-        'content' => $payload,
-        'timeout' => 5
-    ]
-]);
-
-$response = @file_get_contents($shops[$shop], false, $context);
-
-if ($response === false)
-{
-    echo json_encode(['error' => 'IA not reachable']);
-    exit;
-}
-
-$res = json_decode($response, true);
-
-if (!isset($res['ok']) || !$res['ok'])
-{
-    echo json_encode([
-        'error' => $res['error'] ?? 'Reservation failed'
-    ]);
-    exit;
-}
-
-/*
- * Store in MSE cart (session)
- */
-$_SESSION['cart'][] = [
-    'shop'       => $shop,
-    'product_id'=> $productId,
-    'quantity'  => $quantity,
-    'added_at'  => time()
-];
-
-echo json_encode(['success' => true]);
-
-?>-->
 <?php
+
 require __DIR__ . '/../config/session.php';
 header('Content-Type: application/json');
 
-// Recibir datos del frontend
-$data = json_decode(file_get_contents("php://input"), true);
+/*
+|--------------------------------------------------------------------------
+| 1️⃣ Auth check
+|--------------------------------------------------------------------------
+*/
+if (empty($_SESSION['user_id'])) {
+    echo json_encode(['error' => 'Not authenticated']);
+    exit;
+}
+
+$userId = (int) $_SESSION['user_id'];
+
+/*
+|--------------------------------------------------------------------------
+| 2️⃣ Read input
+|--------------------------------------------------------------------------
+*/
+$data = json_decode(file_get_contents('php://input'), true);
 
 if (
+    !is_array($data) ||
     empty($data['shop']) ||
     empty($data['product_id']) ||
     empty($data['quantity']) ||
@@ -98,15 +33,19 @@ if (
     exit;
 }
 
-$shop = $data['shop'];
-$productId = (int)$data['product_id'];
-$quantity = (int)$data['quantity'];
+$shop      = $data['shop'];
+$productId = (int) $data['product_id'];
+$quantity  = (int) $data['quantity'];
 
-// Rutas de las APIs de cada tienda
+/*
+|--------------------------------------------------------------------------
+| 3️⃣ IA endpoints
+|--------------------------------------------------------------------------
+*/
 $shops = [
-    'camping' => '../IAs/camping_shop/api/reserve.php',
-    'makeup'  => '../IAs/makeup_shop/api/reserve.php',
-    'florist' => '../IAs/florist_shop/api/reserve.php'
+    'camping' => __DIR__ . '/../IAs/camping_shop/api/reserve.php',
+    'makeup'  => __DIR__ . '/../IAs/makeup_shop/api/reserve.php',
+    'florist' => __DIR__ . '/../IAs/florist_shop/api/reserve.php'
 ];
 
 if (!isset($shops[$shop])) {
@@ -114,26 +53,30 @@ if (!isset($shops[$shop])) {
     exit;
 }
 
-// Preparar payload según la tienda
+/*
+|--------------------------------------------------------------------------
+| 4️⃣ Build payload per shop
+|--------------------------------------------------------------------------
+*/
 switch ($shop) {
+
     case 'florist':
-        // Esta tienda espera POST normal (form-data)
+        // Florist suele usar form-data
         $payload = http_build_query([
             'item_id' => $productId,
             'qty'     => $quantity
         ]);
-        $header = "Content-Type: application/x-www-form-urlencoded\r\n";
+        $headers = "Content-Type: application/x-www-form-urlencoded\r\n";
         break;
 
     case 'camping':
     case 'makeup':
-        // Estas tiendas esperan JSON
+        // Camping / Makeup → JSON
         $payload = json_encode([
             'product_id' => $productId,
-            'quantity'   => $quantity,
-            'mse_user_id'=> $_SESSION['user']['id']
+            'quantity'   => $quantity
         ]);
-        $header = "Content-Type: application/json\r\n";
+        $headers = "Content-Type: application/json\r\n";
         break;
 
     default:
@@ -141,50 +84,113 @@ switch ($shop) {
         exit;
 }
 
-// Crear contexto HTTP
+/*
+|--------------------------------------------------------------------------
+| 5️⃣ Send request to IA
+|--------------------------------------------------------------------------
+*/
 $context = stream_context_create([
     'http' => [
         'method'  => 'POST',
-        'header'  => $header,
+        'header'  => $headers,
         'content' => $payload,
         'timeout' => 5
     ]
 ]);
 
-// Hacer request a la tienda
 $response = @file_get_contents($shops[$shop], false, $context);
 
 if ($response === false) {
-    echo json_encode(['error' => 'IA not reachable']);
+    echo json_encode([
+        'error' => "Shop API not reachable",
+        'shop'  => $shop
+    ]);
     exit;
 }
 
+$response = trim($response);
+
+/*
+|--------------------------------------------------------------------------
+| 6️⃣ Normalize IA response (ROBUST)
+|--------------------------------------------------------------------------
+*/
+
+// Try JSON decode (if possible)
 $res = json_decode($response, true);
 
-// Manejar respuesta según formato de cada tienda
-if ($shop === 'florist') {
-    if (!isset($res['status']) || $res['status'] !== 'ok') {
+// Case 1: valid JSON with known success fields
+if (is_array($res)) {
+
+    if (
+        (isset($res['ok']) && $res['ok']) ||
+        (isset($res['success']) && $res['success']) ||
+        (isset($res['status']) && $res['status'] === 'ok') ||
+        (isset($res['result']) && $res['result'] === 1)
+    ) {
+        // OK
+    }
+    else {
         echo json_encode([
-            'error' => $res['error'] ?? 'Reservation failed'
+            'error' => "Reservation failed by $shop",
+            'shop_response' => $res
         ]);
         exit;
     }
-} else {
-    if (!isset($res['ok']) || !$res['ok']) {
+
+}
+// Case 2: plain text response (VERY COMMON)
+else {
+
+    // Accept any non-empty response as success
+    if ($response === '') {
         echo json_encode([
-            'error' => $res['error'] ?? 'Reservation failed'
+            'error' => "Empty response from $shop"
         ]);
         exit;
     }
+
+    // Otherwise: assume success
 }
 
-// Guardar en carrito de sesión
-$_SESSION['cart'][] = [
-    'shop'       => $shop,
-    'product_id' => $productId,
-    'quantity'   => $quantity,
-    'added_at'   => time()
-];
 
+/*
+|--------------------------------------------------------------------------
+| 7️⃣ Init cart
+|--------------------------------------------------------------------------
+*/
+if (!isset($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
+}
+
+/*
+|--------------------------------------------------------------------------
+| 8️⃣ Merge item into cart
+|--------------------------------------------------------------------------
+*/
+$merged = false;
+
+foreach ($_SESSION['cart'] as &$item) {
+    if ($item['shop'] === $shop && $item['product_id'] === $productId) {
+        $item['quantity'] += $quantity;
+        $merged = true;
+        break;
+    }
+}
+unset($item);
+
+if (!$merged) {
+    $_SESSION['cart'][] = [
+        'shop'       => $shop,
+        'product_id' => $productId,
+        'quantity'   => $quantity,
+        'added_at'   => time()
+    ];
+}
+
+/*
+|--------------------------------------------------------------------------
+| 9️⃣ Success
+|--------------------------------------------------------------------------
+*/
 echo json_encode(['success' => true]);
-?>

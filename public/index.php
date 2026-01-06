@@ -62,6 +62,4 @@ if (empty($_SESSION['user_id']))
 
 <button onclick="checkout()">Checkout</button>
 
-<script src="../js/app.js"></script>
-
 <?php require __DIR__ . '/../includes/footer.php'; ?>

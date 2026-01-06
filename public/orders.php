@@ -3,8 +3,7 @@
 require __DIR__ . '/../config/session.php';
 require __DIR__ . '/../includes/header.php';
 
-if (empty($_SESSION['user_id']))
-{
+if (empty($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
@@ -18,51 +17,51 @@ if (empty($_SESSION['user_id']))
 </div>
 
 <script>
-fetch('../api/orders.php')
+fetch('/PAPI/Grupal-PAPI/api/orders.php')
     .then(r => r.json())
     .then(data => {
 
+        const container = document.getElementById('orders');
+
         if (!Array.isArray(data) || data.length === 0) {
-            document.getElementById('orders').innerHTML =
-                '<p>No orders found.</p>';
+            container.innerHTML = '<p>No orders found.</p>';
             return;
         }
 
         let html = '';
 
-        data.forEach(o => {
-
+        data.forEach(order => {
             html += `
                 <div style="border:1px solid #ccc; padding:10px; margin-bottom:15px;">
-                    <strong>Order #${o.order_id}</strong><br>
-                    <strong>Shop:</strong> ${o.shop}<br>
-                    <strong>Date:</strong> ${o.date}<br>
-                    <strong>Status:</strong> ${o.status}<br>
-                    <strong>Total:</strong> ${o.total} €<br>
+                    <strong>Order #${order.order_id}</strong><br>
+                    <strong>Date:</strong> ${order.date}<br>
+                    <strong>Status:</strong> ${order.status}<br>
+                    <strong>Total:</strong> ${order.total} €<br>
+                    <strong>Items:</strong>
+                    <ul>
             `;
 
-            if (o.items && o.items.length > 0)
-            {
-                html += '<ul>';
-                o.items.forEach(it => {
-                    html += `
-                        <li>
-                            ${it.name} — 
-                            ${it.quantity} × ${it.price} €
-                        </li>
-                    `;
-                });
-                html += '</ul>';
-            }
+            order.items.forEach(item => {
+                html += `
+                    <li>
+                        ${item.product_name} — ${item.quantity} × ${item.price} € 
+                        (<em>${item.shop}</em>)
+                    </li>
+                `;
+            });
 
-            html += '</div>';
+            html += `
+                    </ul>
+                </div>
+            `;
         });
 
-        document.getElementById('orders').innerHTML = html;
+        container.innerHTML = html;
+
     })
-    .catch(() => {
+    .catch(err => {
         document.getElementById('orders').innerHTML =
-            '<p>Error loading orders.</p>';
+            `<p>Error loading orders: ${err.message}</p>`;
     });
 </script>
 
