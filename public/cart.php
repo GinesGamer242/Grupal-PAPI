@@ -68,6 +68,12 @@ function checkout()
         status.textContent = 'Network error during checkout.';
     });
 }
+
+function clearCart() {
+    <?php $_SESSION['cart'] = []; ?>
+    window.location.reload();
+}
+
 </script>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>

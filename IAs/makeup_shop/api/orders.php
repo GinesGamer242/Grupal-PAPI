@@ -12,7 +12,6 @@ try {
         ]
     );
 
-    // 🔐 user_id es obligatorio porque orders depende de users
     if (!isset($_GET['user_id'])) {
         throw new Exception("Missing user_id");
     }
@@ -36,7 +35,6 @@ try {
 
     foreach ($orders as $order) {
 
-        // items es JSON almacenado como TEXT
         $items = json_decode($order['items'], true);
 
         if (!is_array($items)) {

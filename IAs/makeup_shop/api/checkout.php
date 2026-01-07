@@ -17,7 +17,6 @@ if ($userId <= 0 || empty($items)) {
 try {
     $pdo->beginTransaction();
 
-    // comprobar usuario
     $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     if (!$stmt->fetch()) {
@@ -59,7 +58,6 @@ try {
         ];
     }
 
-    // crear pedido
     $stmt = $pdo->prepare("
         INSERT INTO orders (user_id, items, status, total, shipping_address, created_at)
         VALUES (?, ?, 'sent', ?, ?, NOW())

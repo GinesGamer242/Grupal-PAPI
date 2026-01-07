@@ -51,11 +51,6 @@ if (empty($_SESSION['user_id']))
     <p>Use the search bar to find products.</p>
 </div>
 
-<!--<h3>Cart</h3>
-<div id="cart">
-    <p>Cart is empty.</p>
-</div>
 
-<button onclick="checkout()">Checkout</button>-->
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>

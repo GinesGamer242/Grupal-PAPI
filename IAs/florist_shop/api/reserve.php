@@ -2,9 +2,7 @@
 require __DIR__ . '/../Connection.php';
 header('Content-Type: application/json');
 
-// --------------------
-// 1️⃣ Leer JSON del body
-// --------------------
+
 $data = json_decode(file_get_contents("php://input"), true);
 
 $productId = (int)($data['product_id'] ?? 0);
@@ -15,15 +13,12 @@ if ($productId <= 0 || $qty <= 0) {
     exit;
 }
 
-// --------------------
-// 2️⃣ Intentar descontar stock (transacción segura)
-// --------------------
+
 try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     $pdo->beginTransaction();
 
-    // Bloquear fila del producto
     $stmt = $pdo->prepare(
         "SELECT stock FROM items WHERE id = ? FOR UPDATE"
     );
@@ -42,13 +37,11 @@ try {
         exit;
     }
 
-    // Restar stock
     $stmt = $pdo->prepare(
         "UPDATE items SET stock = stock - ? WHERE id = ?"
     );
     $stmt->execute([$qty, $productId]);
 
-    // Comprobación opcional
     if ($stmt->rowCount() !== 1) {
         throw new Exception('Stock update failed');
     }

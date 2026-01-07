@@ -11,22 +11,23 @@
 
     let allProducts = [];
 
+    //DOWNLOAD PRODUCTS
     fetch('/PAPI/Grupal-PAPI/api/search.php')
-  .then(r => r.json())
-  .then(data => {
-    allProducts = Array.isArray(data) ? data : [];
+      .then(r => r.json())
+      .then(data => {
+        allProducts = Array.isArray(data) ? data : [];
 
-    // ← AÑADE ESTO
-    allProducts.forEach(p => {
-        if (typeof p.currentStock === 'undefined') {
-            p.currentStock = Number.isFinite(p.stock) ? p.stock : 0;
-        }
-    });
+        // ← AÑADE ESTO
+        allProducts.forEach(p => {
+            if (typeof p.currentStock === 'undefined') {
+                p.currentStock = Number.isFinite(p.stock) ? p.stock : 0;
+            }
+        });
 
-    populateFilters(allProducts);
-    renderResults(allProducts);
-  })
-  .catch(err => console.error('DB Load error:', err));
+        populateFilters(allProducts);
+        renderResults(allProducts);
+      })
+      .catch(err => console.error('DB Load error:', err));
 
     // SEARCH
     function search(query) {
@@ -188,6 +189,7 @@
         });
     }
 
+    
     // EVENT LISTENERS
     qInput.addEventListener('keyup', e => {
         if (e.key === 'Enter') search();
@@ -199,7 +201,6 @@
 
     //window.addEventListener('DOMContentLoaded', search);
 
-    // EXPOSE ONLY WHAT HTML NEEDS
     window.search       = search;
     window.applyFilters = applyFilters;
     window.addToCart    = addToCart;

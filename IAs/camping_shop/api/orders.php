@@ -5,7 +5,6 @@ require __DIR__ . '/../config/conn.php';
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 
-// Validar y obtener el ID de usuario
 $mseUser = isset($_GET['mse_user_id']) ? (int)$_GET['mse_user_id'] : 0;
 
 if ($mseUser <= 0)
@@ -19,7 +18,6 @@ if ($mseUser <= 0)
 
 try
 {
-    // Obtener pedidos e ítems
     $stmt = $pdo->prepare("
         SELECT o.id AS order_id, o.created_at, 
                oi.quantity, oi.price, i.name
@@ -32,7 +30,6 @@ try
     $stmt->execute([$mseUser]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Agrupar ítems por pedido
     $orders = [];
     foreach ($rows as $row) {
         $id = $row['order_id'];

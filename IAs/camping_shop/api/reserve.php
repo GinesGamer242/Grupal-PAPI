@@ -2,9 +2,7 @@
 require __DIR__ . '/../config/conn.php';
 header('Content-Type: application/json');
 
-// --------------------
-// 1️⃣ Leer JSON del body
-// --------------------
+
 $data = json_decode(file_get_contents("php://input"), true);
 
 $productId = (int)($data['product_id'] ?? 0);
@@ -15,13 +13,10 @@ if ($productId <= 0 || $qty <= 0) {
     exit;
 }
 
-// --------------------
-// 2️⃣ Intentar descontar stock (transacción segura)
-// --------------------
+
 try {
     $pdo->beginTransaction();
 
-    // Bloquear fila del producto para evitar race conditions
     $stmt = $pdo->prepare("SELECT stock FROM items WHERE id = ? FOR UPDATE");
     $stmt->execute([$productId]);
     $item = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -38,7 +33,6 @@ try {
         exit;
     }
 
-    // Restar stock
     $stmt = $pdo->prepare("UPDATE items SET stock = stock - ? WHERE id = ?");
     $stmt->execute([$qty, $productId]);
 
