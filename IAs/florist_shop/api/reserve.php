@@ -1,53 +1,70 @@
 <?php
-header("Content-Type: application/json");
+require __DIR__ . '/../Connection.php';
+header('Content-Type: application/json');
 
-require_once __DIR__ . "/../Connection.php";
+// --------------------
+// 1️⃣ Leer JSON del body
+// --------------------
+$data = json_decode(file_get_contents("php://input"), true);
 
-$itemId = $_POST['item_id'] ?? $_GET['item_id'] ?? null;
-$qty    = $_POST['qty']     ?? $_GET['qty']     ?? null;
+$productId = (int)($data['product_id'] ?? 0);
+$qty       = (int)($data['quantity'] ?? 0);
 
-if ($itemId === null || $qty === null) {
-    http_response_code(400);
-    echo json_encode(["error" => "Missing parameters"]);
+if ($productId <= 0 || $qty <= 0) {
+    echo json_encode(['ok' => false, 'error' => 'Invalid data']);
     exit;
 }
 
-$itemId = (int)$itemId;
-$qty    = (int)$qty;
-
+// --------------------
+// 2️⃣ Intentar descontar stock (transacción segura)
+// --------------------
 try {
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
     $pdo->beginTransaction();
 
+    // Bloquear fila del producto
     $stmt = $pdo->prepare(
         "SELECT stock FROM items WHERE id = ? FOR UPDATE"
     );
-    $stmt->execute([$itemId]);
-    $stock = $stmt->fetchColumn();
+    $stmt->execute([$productId]);
+    $item = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($stock === false || $stock < $qty) {
-        throw new Exception("Not enough stock");
+    if (!$item) {
+        $pdo->rollBack();
+        echo json_encode(['ok' => false, 'error' => 'Product not found']);
+        exit;
     }
 
+    if ((int)$item['stock'] < $qty) {
+        $pdo->rollBack();
+        echo json_encode(['ok' => false, 'error' => 'Insufficient stock']);
+        exit;
+    }
+
+    // Restar stock
     $stmt = $pdo->prepare(
         "UPDATE items SET stock = stock - ? WHERE id = ?"
     );
-    $stmt->execute([$qty, $itemId]);
+    $stmt->execute([$qty, $productId]);
+
+    // Comprobación opcional
+    if ($stmt->rowCount() !== 1) {
+        throw new Exception('Stock update failed');
+    }
 
     $pdo->commit();
-    //echo json_encode(["ok" => true]);
-    echo json_encode([
-        "status" => "ok"
-    ]);
+
+    echo json_encode(['ok' => true]);
 
 } catch (Exception $e) {
-    $pdo->rollBack();
-    /*http_response_code(400);
-    echo json_encode(["error" => $e->getMessage()]);*/
-    http_response_code(400);
-    echo json_encode([
-        "error" => "Not enough stock",
-        "details" => $e->getMessage()
-    ]);
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
 
+    echo json_encode([
+        'ok' => false,
+        'error' => 'DB error',
+        'exception' => $e->getMessage()
+    ]);
 }
-?>

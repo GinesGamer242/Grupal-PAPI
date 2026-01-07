@@ -1,91 +1,72 @@
 <?php
+require __DIR__ . '/../config.php';
 
-require __DIR__ . '/../config/database.php';
 header('Content-Type: application/json');
 
+// --------------------
+// 1️⃣ Leer JSON del body
+// --------------------
 $data = json_decode(file_get_contents("php://input"), true);
 
 $productId = (int)($data['product_id'] ?? 0);
-$quantity  = (int)($data['quantity'] ?? 0);
-$userId    = (int)($data['user_id'] ?? 0);
+$qty       = (int)($data['quantity'] ?? 0);
 
-if ($productId <= 0 || $quantity <= 0 || $userId <= 0) {
-    echo json_encode([
-        'error' => 'Invalid data'
-    ]);
+if ($productId <= 0 || $qty <= 0) {
+    echo json_encode(['ok' => false, 'error' => 'Invalid data']);
     exit;
 }
 
+// --------------------
+// 2️⃣ Intentar descontar stock (transacción segura)
+// --------------------
 try {
+    // 🔒 IMPORTANTE: lanzar excepciones reales
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
     $pdo->beginTransaction();
 
-    // comprobar usuario
-    $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ?");
-    $stmt->execute([$userId]);
-    if (!$stmt->fetch()) {
-        $pdo->rollBack();
-        echo json_encode(['error' => 'User not found']);
-        exit;
-    }
-
-    // bloquear producto y comprobar stock
+    // Bloquear fila del producto para evitar race conditions
     $stmt = $pdo->prepare(
-        "SELECT id, name, price, stock 
-         FROM products 
-         WHERE id = ? 
-         FOR UPDATE"
+        "SELECT stock FROM products WHERE id = ? FOR UPDATE"
     );
     $stmt->execute([$productId]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$product || $product['stock'] < $quantity) {
+    if (!$product) {
         $pdo->rollBack();
-        echo json_encode([
-            'error' => 'Insufficient stock'
-        ]);
+        echo json_encode(['ok' => false, 'error' => 'Product not found']);
         exit;
     }
 
-    // reducir stock
+    if ((int)$product['stock'] < $qty) {
+        $pdo->rollBack();
+        echo json_encode(['ok' => false, 'error' => 'Insufficient stock']);
+        exit;
+    }
+
+    // Restar stock
     $stmt = $pdo->prepare(
-        "UPDATE products 
-         SET stock = stock - ? 
-         WHERE id = ?"
+        "UPDATE products SET stock = stock - ? WHERE id = ?"
     );
-    $stmt->execute([$quantity, $productId]);
+    $stmt->execute([$qty, $productId]);
 
-    // crear pedido (status = pending)
-    $items = [
-        [
-            "product_id" => $productId,
-            "name" => $product['name'],
-            "price" => (float)$product['price'],
-            "quantity" => $quantity
-        ]
-    ];
-
-    $total = $product['price'] * $quantity;
-
-    $stmt = $pdo->prepare(
-        "INSERT INTO orders (user_id, items, status, total, created_at)
-         VALUES (?, ?, 'pending', ?, NOW())"
-    );
-    $stmt->execute([
-        $userId,
-        json_encode($items),
-        $total
-    ]);
+    // 🔍 Comprobación extra (opcional pero recomendable)
+    if ($stmt->rowCount() !== 1) {
+        throw new Exception('Stock update failed');
+    }
 
     $pdo->commit();
 
-    echo json_encode([
-        'ok' => true,
-        'order_id' => (int)$pdo->lastInsertId()
-    ]);
+    echo json_encode(['ok' => true]);
 
 } catch (Exception $e) {
-    $pdo->rollBack();
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+
     echo json_encode([
-        'error' => 'DB error'
+        'ok' => false,
+        'error' => 'DB error',
+        'exception' => $e->getMessage()
     ]);
 }

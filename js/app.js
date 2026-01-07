@@ -25,6 +25,14 @@
             .then(r => r.json())
             .then(data => {
                 allProducts = Array.isArray(data) ? data : [];
+
+                // Guardamos stock actual de cada producto
+                allProducts.forEach(p => {
+                    if (typeof p.currentStock === 'undefined') {
+                        p.currentStock = Number.isFinite(p.stock) ? p.stock : 0;
+                    }
+                });
+
                 populateFilters(allProducts);
                 renderResults(allProducts);
             })
@@ -93,6 +101,8 @@
         }
 
         products.forEach(p => {
+            const stock = p.currentStock;
+
             resultsDiv.innerHTML += `
                 <div style="
                     border:1px solid #ccc;
@@ -107,12 +117,15 @@
                         ${p.description ?? ''}<br><br>
                         <em>Category:</em> ${p.category}<br>
                         <em>Shop:</em> ${p.shop}<br><br>
-                        <strong>${p.price} €</strong><br><br>
-                        <a href="item.php?shop=${p.shop}&product_id=${p.product_id}">
-                            View details
-                        </a><br><br>
-                        <button onclick="addToCart('${p.shop}', ${p.product_id})">
-                            Add to cart
+                        <strong>${p.price} €</strong><br>
+                        <strong id="stock-${p.shop}-${p.product_id}">${stock}</strong> in stock<br><br>
+
+                        <button 
+                            id="btn-${p.shop}-${p.product_id}"
+                            onclick="addToCart('${p.shop}', ${p.product_id})"
+                            ${stock <= 0 ? 'disabled' : ''}
+                        >
+                            ${stock <= 0 ? 'Out of stock' : 'Add to cart'}
                         </button>
                     </div>
                     ${
@@ -127,7 +140,7 @@
     }
 
     // =========================
-    // ADD TO CART (SERVER IS SOURCE OF TRUTH)
+    // ADD TO CART (MSE reserve.php)
     // =========================
     function addToCart(shop, productId) {
         fetch('/PAPI/Grupal-PAPI/api/reserve.php', {
@@ -143,8 +156,22 @@
         .then(r => r.json())
         .then(res => {
             if (res.success) {
-                alert('Product added to cart');
+                console.log('Added to cart:', res.item);
+
+                // Reducir stock en pantalla
+                const product = allProducts.find(p => p.shop === shop && p.product_id === productId);
+                if (product) {
+                    product.currentStock -= 1;
+                    const stockEl = document.getElementById(`stock-${shop}-${productId}`);
+                    const btnEl   = document.getElementById(`btn-${shop}-${productId}`);
+                    stockEl.textContent = product.currentStock;
+                    if (product.currentStock <= 0) {
+                        btnEl.disabled = true;
+                        btnEl.textContent = 'Out of stock';
+                    }
+                }
             } else {
+                console.error('Server error:', res);
                 alert(res.error || 'Error reserving product');
             }
         })

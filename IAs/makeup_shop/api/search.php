@@ -20,8 +20,10 @@ try {
             p.name,
             p.description,
             p.price,
+            p.stock,
             p.image,
             c.name AS category
+
         FROM products p
         JOIN subcategories s ON p.subcategory_id = s.id
         JOIN categories c ON s.category_id = c.id
@@ -46,9 +48,11 @@ try {
             "name" => $product["name"] ?? "",
             "description" => $product["description"] ?? "",
             "price" => (float)$product["price"],
+            "stock" => (int)$product["stock"],
             "category" => $product["category"] ?? "",
             "image" => $product["image"] ?? ""
         ];
+
     }
 
     echo json_encode($response, JSON_PRETTY_PRINT);
