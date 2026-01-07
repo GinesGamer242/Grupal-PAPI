@@ -109,12 +109,16 @@
                         <strong>${p.price} €</strong><br>
                         <strong id="stock-${p.shop}-${p.product_id}">${stock}</strong> in stock<br><br>
 
+                        <a href="item.php?shop=${p.shop}&product_id=${p.product_id}">
+                            View details
+                        </a>
+                        
                         <button 
                             id="btn-${p.shop}-${p.product_id}"
                             onclick="addToCart('${p.shop}', ${p.product_id})"
                             ${stock <= 0 ? 'disabled' : ''}
                         >
-                            ${stock <= 0 ? 'Out of stock' : 'Add to cart'}
+                             | ${stock <= 0 ? 'Out of stock' : 'Add to cart'}
                         </button>
                     </div>
                     ${
