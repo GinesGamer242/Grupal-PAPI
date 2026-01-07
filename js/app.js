@@ -1,164 +1,204 @@
-const qInput     = document.getElementById('q');
-const resultsDiv = document.getElementById('results');
-const cartDiv    = document.getElementById('cart');
-const maxPriceEl = document.getElementById('maxPrice');
+(() => {
+    // =========================
+    // GUARD: solo ejecutar en index (donde existe #q)
+    // =========================
+    const qInput = document.getElementById('q');
+    if (!qInput) return;
 
-let allProducts = [];
-let cart = [];
+    // =========================
+    // ELEMENTS
+    // =========================
+    const resultsDiv     = document.getElementById('results');
+    const maxPriceEl     = document.getElementById('maxPrice');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const shopFilter     = document.getElementById('shopFilter');
 
-/* =========================
-   SEARCH
-========================= */
-function search()
-{
-    fetch('../api/search.php?q=' + encodeURIComponent(qInput.value))
-        .then(r => r.json())
-        .then(data => {
-            allProducts = data;
-            renderResults(data);
+    let allProducts = [];
+
+    // =========================
+    // SEARCH
+    // =========================
+    function search(query) {
+        const q = query !== undefined ? query : qInput.value;
+
+        fetch('/PAPI/Grupal-PAPI/api/search.php?q=' + encodeURIComponent(q))
+            .then(r => r.json())
+            .then(data => {
+                allProducts = Array.isArray(data) ? data : [];
+
+                // Guardamos stock actual de cada producto
+                allProducts.forEach(p => {
+                    if (typeof p.currentStock === 'undefined') {
+                        p.currentStock = Number.isFinite(p.stock) ? p.stock : 0;
+                    }
+                });
+
+                populateFilters(allProducts);
+                renderResults(allProducts);
+            })
+            .catch(err => {
+                console.error('Search error:', err);
+                resultsDiv.innerHTML = '<p>Error loading products</p>';
+            });
+    }
+
+    // =========================
+    // FILTERS
+    // =========================
+    function applyFilters() {
+        if (allProducts.length === 0) return;
+
+        let filtered = [...allProducts];
+
+        const maxPrice = parseFloat(maxPriceEl.value);
+        if (!isNaN(maxPrice)) {
+            filtered = filtered.filter(p => Number(p.price) <= maxPrice);
+        }
+
+        const category = categoryFilter.value;
+        if (category) {
+            filtered = filtered.filter(p => p.category === category);
+        }
+
+        const shop = shopFilter.value;
+        if (shop) {
+            filtered = filtered.filter(p => p.shop === shop);
+        }
+
+        renderResults(filtered);
+    }
+
+    function populateFilters(products) {
+        categoryFilter.innerHTML = '<option value="">All</option>';
+        shopFilter.innerHTML     = '<option value="">All</option>';
+
+        const categories = new Set();
+        const shops      = new Set();
+
+        products.forEach(p => {
+            if (p.category) categories.add(p.category);
+            if (p.shop) shops.add(p.shop);
         });
-}
 
-/* =========================
-   FILTERS (client-side)
-========================= */
-function applyFilters()
-{
-    let filtered = [...allProducts];
+        categories.forEach(c => {
+            categoryFilter.innerHTML += `<option value="${c}">${c}</option>`;
+        });
 
-    const maxPrice = parseFloat(maxPriceEl.value);
-    if (!isNaN(maxPrice))
-    {
-        filtered = filtered.filter(p => p.price <= maxPrice);
+        shops.forEach(s => {
+            shopFilter.innerHTML += `<option value="${s}">${s}</option>`;
+        });
     }
 
-    renderResults(filtered);
-}
+    // =========================
+    // RENDER PRODUCTS
+    // =========================
+    function renderResults(products) {
+        resultsDiv.innerHTML = '';
 
-/* =========================
-   RENDER PRODUCTS
-========================= */
-function renderResults(products)
-{
-    resultsDiv.innerHTML = '';
+        if (!Array.isArray(products) || products.length === 0) {
+            resultsDiv.innerHTML = '<p>No products found.</p>';
+            return;
+        }
 
-    if (products.length === 0)
-    {
-        resultsDiv.innerHTML = '<p>No products found.</p>';
-        return;
-    }
+        products.forEach(p => {
+            const stock = p.currentStock;
 
-    products.forEach(p => {
-        resultsDiv.innerHTML += `
-            <div style="
-            border:1px solid #ccc;
-            padding:10px;
-            margin-bottom:10px;
-            display:flex;
-            justify-content:space-between;
-            align-items:flex-start;
-            ">
-            <div style="flex:1; padding-right:15px;">
-                <strong>${p.name}</strong><br><br>
+            resultsDiv.innerHTML += `
+                <div style="
+                    border:1px solid #ccc;
+                    padding:10px;
+                    margin-bottom:10px;
+                    display:flex;
+                    justify-content:space-between;
+                    gap:15px;
+                ">
+                    <div style="flex:1;">
+                        <strong>${p.name}</strong><br><br>
+                        ${p.description ?? ''}<br><br>
+                        <em>Category:</em> ${p.category}<br>
+                        <em>Shop:</em> ${p.shop}<br><br>
+                        <strong>${p.price} €</strong><br>
+                        <strong id="stock-${p.shop}-${p.product_id}">${stock}</strong> in stock<br><br>
 
-                ${p.description ?? ''}<br><br>
-
-                <em>Category:</em> ${p.category}<br>
-                <em>Shop:</em> ${p.shop}<br><br>
-
-                <strong>${p.price} €</strong><br><br>
-
-                <a href="item.php?shop=${p.shop}&product_id=${p.product_id}">
-                    View details
-                </a>
-                <br><br>
-
-                <button onclick="addToCart('${p.shop}', ${p.product_id})">
-                    Add to cart
-                </button>
-            </div>
-
-            ${p.image ? `
-                <div style="min-width:220px; text-align:right;">
-                    <img src="${p.image}" style="max-width:220px; height:auto;">
+                        <button 
+                            id="btn-${p.shop}-${p.product_id}"
+                            onclick="addToCart('${p.shop}', ${p.product_id})"
+                            ${stock <= 0 ? 'disabled' : ''}
+                        >
+                            ${stock <= 0 ? 'Out of stock' : 'Add to cart'}
+                        </button>
+                    </div>
+                    ${
+                        p.image
+                        ? `<img src="/PAPI/Grupal-PAPI/IAs/${p.shop}_shop/${p.image}"
+                               style="max-width:200px;">`
+                        : ''
+                    }
                 </div>
-            ` : ''}
-            </div>
-        `;
-    });
-}
-
-/* =========================
-   ADD TO CART
-========================= */
-function addToCart(source, productId)
-{
-    fetch('../api/reserve.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            shop: source,
-            product_id: productId,
-            quantity: 1
-        }),
-        credentials: 'same-origin'
-    })
-    .then(r => r.json())
-    .then(res => {
-        if (res.ok || res.success)
-        {
-            cart.push({ source, product_id: productId, quantity: 1 });
-            renderCart();
-        }
-        else
-        {
-            alert(res.error || 'Error reserving product');
-        }
-    });
-}
-
-/* =========================
-   RENDER CART
-========================= */
-function renderCart()
-{
-    if (cart.length === 0)
-    {
-        cartDiv.innerHTML = '<p>Cart is empty.</p>';
-        return;
+            `;
+        });
     }
 
-    let html = '<ul>';
-    cart.forEach(i => {
-        html += `
-            <li>
-                ${i.source} - Product #${i.product_id} (x${i.quantity})
-            </li>
-        `;
-    });
-    html += '</ul>';
-
-    cartDiv.innerHTML = html;
-}
-
-/* =========================
-   CHECKOUT
-========================= */
-function checkout()
-{
-    fetch('../api/checkout.php', { method: 'POST' })
+    // =========================
+    // ADD TO CART (MSE reserve.php)
+    // =========================
+    function addToCart(shop, productId) {
+        fetch('/PAPI/Grupal-PAPI/api/reserve.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                shop: shop,
+                product_id: productId,
+                quantity: 1
+            })
+        })
         .then(r => r.json())
         .then(res => {
-            if (res.ok)
-            {
-                cart = [];
-                renderCart();
-                alert('Order completed!');
-                window.location.href = 'orders.php';
+            if (res.success) {
+                console.log('Added to cart:', res.item);
+
+                // Reducir stock en pantalla
+                const product = allProducts.find(p => p.shop === shop && p.product_id === productId);
+                if (product) {
+                    product.currentStock -= 1;
+                    const stockEl = document.getElementById(`stock-${shop}-${productId}`);
+                    const btnEl   = document.getElementById(`btn-${shop}-${productId}`);
+                    stockEl.textContent = product.currentStock;
+                    if (product.currentStock <= 0) {
+                        btnEl.disabled = true;
+                        btnEl.textContent = 'Out of stock';
+                    }
+                }
+            } else {
+                console.error('Server error:', res);
+                alert(res.error || 'Error reserving product');
             }
-            else
-            {
-                alert('Checkout failed');
-            }
+        })
+        .catch(err => {
+            console.error('Add to cart error:', err);
+            alert('Network error while reserving product');
         });
-}
+    }
+
+    // =========================
+    // EVENT LISTENERS
+    // =========================
+    qInput.addEventListener('keyup', e => {
+        if (e.key === 'Enter') search();
+    });
+
+    maxPriceEl.addEventListener('input', applyFilters);
+    categoryFilter.addEventListener('change', applyFilters);
+    shopFilter.addEventListener('change', applyFilters);
+
+    window.addEventListener('DOMContentLoaded', search);
+
+    // =========================
+    // EXPOSE ONLY WHAT HTML NEEDS
+    // =========================
+    window.search       = search;
+    window.applyFilters = applyFilters;
+    window.addToCart    = addToCart;
+
+})();

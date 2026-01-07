@@ -1,14 +1,7 @@
 <?php
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
 require __DIR__ . '/../config/conn.php';
 require __DIR__ . '/../config/session.php';
-
-require 'PHPMailer-master/src/Exception.php';
-require 'PHPMailer-master/src/PHPMailer.php';
-require 'PHPMailer-master/src/SMTP.php';
 
 $msg = '';
 
@@ -46,11 +39,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
 
             $pdo->commit();
 
-            $activationLink = "http://localhost/PAPI/Grupal-PAPI/public/activate.php?token=$token";
+            //$activationLink = "http://localhost/PAPI/GA_GinesLuciaIrene/Grupal-PAPI/public/activate.php?token=$token";
+              $activationLink = "http://localhost/PAPI/Grupal-PAPI/public/activate.php?token=$token";
 
-            $msg = "Verification mail sent.";
+            $msg = "Account created. Activate via email:<br><a href='$activationLink'>$activationLink</a>";
 
-            SendMail($email, $activationLink);
+            // aquí luego irá mail()
         }
         catch (Exception $e) {
             $pdo->rollBack();
@@ -59,36 +53,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
     }
 }
 require __DIR__ . '/../includes/header.php';
-
-function SendMail(string $userEmail, string $sentLink)
-{
-    $mail = new PHPMailer(true);
-
-    try
-    {
-        $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';
-        $mail->SMTPAuth   = true;
-        $mail->Username   = 'ginesgonzalezbruscaspam@gmail.com';
-        $mail->Password   = 'vsuy dhes ncrl sgdm';
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
-
-        $mail->setFrom('MSEshop@gmail.com', 'Sender');
-        $mail->addAddress($userEmail, 'User');
-
-        $mail->isHTML(true);
-        $mail->Subject = 'MSE Account Verification Mail';
-        $mail->Body    = "This is the last step before verifying your account! To verify it, click the next link : $sentLink";
-        $mail->AltBody = "Couldn't show mail.";
-
-        $mail->send();
-    }
-    catch (Exception $e)
-    {
-        echo "Error sending the mail: {$mail->ErrorInfo}";
-    }
-}
 
 ?>
 
