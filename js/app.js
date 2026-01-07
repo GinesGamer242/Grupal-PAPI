@@ -1,13 +1,9 @@
 (() => {
-    // =========================
-    // GUARD: solo ejecutar en index (donde existe #q)
-    // =========================
+
     const qInput = document.getElementById('q');
     if (!qInput) return;
 
-    // =========================
     // ELEMENTS
-    // =========================
     const resultsDiv     = document.getElementById('results');
     const maxPriceEl     = document.getElementById('maxPrice');
     const categoryFilter = document.getElementById('categoryFilter');
@@ -15,9 +11,7 @@
 
     let allProducts = [];
 
-    // =========================
     // SEARCH
-    // =========================
     function search(query) {
         const q = query !== undefined ? query : qInput.value;
 
@@ -26,7 +20,6 @@
             .then(data => {
                 allProducts = Array.isArray(data) ? data : [];
 
-                // Guardamos stock actual de cada producto
                 allProducts.forEach(p => {
                     if (typeof p.currentStock === 'undefined') {
                         p.currentStock = Number.isFinite(p.stock) ? p.stock : 0;
@@ -42,9 +35,7 @@
             });
     }
 
-    // =========================
     // FILTERS
-    // =========================
     function applyFilters() {
         if (allProducts.length === 0) return;
 
@@ -89,9 +80,7 @@
         });
     }
 
-    // =========================
     // RENDER PRODUCTS
-    // =========================
     function renderResults(products) {
         resultsDiv.innerHTML = '';
 
@@ -139,9 +128,7 @@
         });
     }
 
-    // =========================
-    // ADD TO CART (MSE reserve.php)
-    // =========================
+    // ADD TO CART
     function addToCart(shop, productId) {
         fetch('/PAPI/Grupal-PAPI/api/reserve.php', {
             method: 'POST',
@@ -158,7 +145,6 @@
             if (res.success) {
                 console.log('Added to cart:', res.item);
 
-                // Reducir stock en pantalla
                 const product = allProducts.find(p => p.shop === shop && p.product_id === productId);
                 if (product) {
                     product.currentStock -= 1;
@@ -181,9 +167,7 @@
         });
     }
 
-    // =========================
     // EVENT LISTENERS
-    // =========================
     qInput.addEventListener('keyup', e => {
         if (e.key === 'Enter') search();
     });
@@ -194,9 +178,7 @@
 
     window.addEventListener('DOMContentLoaded', search);
 
-    // =========================
     // EXPOSE ONLY WHAT HTML NEEDS
-    // =========================
     window.search       = search;
     window.applyFilters = applyFilters;
     window.addToCart    = addToCart;

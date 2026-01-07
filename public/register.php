@@ -39,12 +39,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
 
             $pdo->commit();
 
-            //$activationLink = "http://localhost/PAPI/GA_GinesLuciaIrene/Grupal-PAPI/public/activate.php?token=$token";
               $activationLink = "http://localhost/PAPI/Grupal-PAPI/public/activate.php?token=$token";
 
-            $msg = "Account created. Activate via email:<br><a href='$activationLink'>$activationLink</a>";
+            $msg = "Activation mail sent";
 
-            // aquí luego irá mail()
+            SendMail($email, $activationLink);
         }
         catch (Exception $e) {
             $pdo->rollBack();
@@ -53,6 +52,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
     }
 }
 require __DIR__ . '/../includes/header.php';
+
+function SendMail(string $userEmail, string $sentLink)
+{
+    $mail = new PHPMailer(true);
+
+    try
+    {
+        $mail->isSMTP();
+        $mail->Host       = 'smtp.gmail.com';
+        $mail->SMTPAuth   = true;
+        $mail->Username   = 'ginesgonzalezbruscaspam@gmail.com';
+        $mail->Password   = 'vsuy dhes ncrl sgdm';
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = 587;
+
+        $mail->setFrom('MSEShop@gmail.com', 'Sender');
+        $mail->addAddress($userEmail, 'User');
+
+        $mail->isHTML(true);
+        $mail->Subject = 'Account Verification Mail';
+        $mail->Body    = "This is the last step before verifying your account! To verify it, click the next link : $sentLink";
+        $mail->AltBody = "Couldn't show mail.";
+
+        $mail->send();
+    }
+    catch (Exception $e)
+    {
+        echo "Error sending the mail: {$mail->ErrorInfo}";
+    }
+}
 
 ?>
 

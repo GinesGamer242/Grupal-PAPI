@@ -1,11 +1,8 @@
 <?php
 require __DIR__ . '/../config/session.php';
-require __DIR__ . '/../config/conn.php'; // tu conexión PDO
+require __DIR__ . '/../config/conn.php';
 header('Content-Type: application/json');
 
-// ----------------------------
-// 1️⃣ Autenticación
-// ----------------------------
 if (empty($_SESSION['user_id'])) {
     echo json_encode(['error' => 'Not authenticated']);
     exit;
@@ -19,16 +16,12 @@ if (empty($cart)) {
     exit;
 }
 
-// ----------------------------
-// 2️⃣ Reservar stock en cada tienda
-// ----------------------------
 $shopsEndpoints = [
     'camping' => '../IAs/camping_shop/api/reserve.php',
     'makeup'  => '../IAs/makeup_shop/api/reserve.php',
     'florist' => '../IAs/florist_shop/api/reserve.php'
 ];
 
-// Guardar items que vamos a insertar en DB
 $cartForDB = [];
 
 foreach ($cart as $item) {
@@ -38,7 +31,6 @@ foreach ($cart as $item) {
         exit;
     }
 
-    // Preparar payload según tienda
     switch ($shop) {
         case 'florist':
             $payload = http_build_query([
@@ -92,34 +84,27 @@ foreach ($cart as $item) {
         }
     }
 
-    // Guardamos item para DB
     $cartForDB[] = [
         'shop' => $shop,
         'product_id' => $item['product_id'],
         'product_name' => $item['name'] ?? "Product ".$item['product_id'],
         'quantity' => $item['quantity'],
-        'price' => $item['price'] ?? 50 // fallback si no tenemos price
+        'price' => $item['price'] ?? 50
     ];
 }
 
-// ----------------------------
-// 3️⃣ Guardar pedido en DB
-// ----------------------------
 try {
     $pdo->beginTransaction();
 
-    // Calcular total
     $total = 0;
     foreach ($cartForDB as $item) {
         $total += $item['quantity'] * $item['price'];
     }
 
-    // Insertar pedido
     $stmt = $pdo->prepare("INSERT INTO orders (user_id, total) VALUES (?, ?)");
     $stmt->execute([$userId, $total]);
     $orderId = $pdo->lastInsertId();
 
-    // Insertar items
     $stmtItem = $pdo->prepare("
         INSERT INTO order_items
         (order_id, shop, product_id, product_name, quantity, price)
@@ -139,7 +124,6 @@ try {
 
     $pdo->commit();
 
-    // Limpiar carrito
     $_SESSION['cart'] = [];
 
     echo json_encode(['success' => true]);

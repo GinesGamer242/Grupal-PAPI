@@ -1,15 +1,14 @@
 <?php
-// Mostrar errores PHP para depuración
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require __DIR__ . '/../config/session.php';
-require __DIR__ . '/../config/conn.php'; // tu PDO connection
+require __DIR__ . '/../config/conn.php';
 
 header('Content-Type: application/json');
 
-// ✅ Autenticación
 if (empty($_SESSION['user_id'])) {
     echo json_encode(['error' => 'Not authenticated']);
     exit;
@@ -18,7 +17,6 @@ if (empty($_SESSION['user_id'])) {
 $userId = (int) $_SESSION['user_id'];
 
 try {
-    // Obtener todos los pedidos del usuario
     $stmtOrders = $pdo->prepare("
         SELECT id AS order_id, total, created_at
         FROM orders
@@ -31,7 +29,6 @@ try {
     $result = [];
 
     if ($orders) {
-        // Preparar statement para items
         $stmtItems = $pdo->prepare("
             SELECT shop, product_id, product_name, quantity, price
             FROM order_items
@@ -45,7 +42,7 @@ try {
             $result[] = [
                 'order_id' => $order['order_id'],
                 'date'     => $order['created_at'],
-                'status'   => 'paid',  // temporal, puedes usar otro campo si lo agregas
+                'status'   => 'paid',
                 'total'    => $order['total'],
                 'items'    => $items
             ];

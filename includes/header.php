@@ -16,7 +16,6 @@ require __DIR__ . '/../config/session.php';
 <header>
     <h1>Meta-Search E-Commerce</h1>
     <nav>
-        <!--"/PAPI/GA_GinesLuciaIrene/Grupal-PAPI/public/index.php"-->
         <a href="/PAPI/Grupal-PAPI/public/index.php">Products</a> |
         <a href="/PAPI/Grupal-PAPI/public/cart.php">Cart</a> |
         <a href="/PAPI/Grupal-PAPI/public/orders.php">Orders</a> |
