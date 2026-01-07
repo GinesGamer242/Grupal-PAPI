@@ -11,6 +11,16 @@
 
     let allProducts = [];
 
+    // Cargar todos los productos al iniciar (sin usar query)
+    fetch('/PAPI/Grupal-PAPI/api/search.php')
+      .then(r => r.json())
+      .then(data => {
+        allProducts = Array.isArray(data) ? data : [];
+        populateFilters(allProducts);
+        renderResults(allProducts);
+      })
+      .catch(err => console.error('DB Load error:', err));
+
     // SEARCH
     function search(query) {
         const q = query !== undefined ? query : qInput.value;
@@ -180,7 +190,7 @@
     categoryFilter.addEventListener('change', applyFilters);
     shopFilter.addEventListener('change', applyFilters);
 
-    window.addEventListener('DOMContentLoaded', search);
+    //window.addEventListener('DOMContentLoaded', search);
 
     // EXPOSE ONLY WHAT HTML NEEDS
     window.search       = search;
