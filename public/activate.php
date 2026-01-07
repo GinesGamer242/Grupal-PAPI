@@ -7,10 +7,12 @@ $msg = '';
 
 $token = $_GET['token'] ?? '';
 
-if ($token === '') {
+if ($token === '')
+{
     $msg = "Invalid activation link.";
 }
-else {
+else
+{
     $stmt = $pdo->prepare("
         SELECT at.user_id
         FROM activation_tokens at
@@ -21,13 +23,16 @@ else {
     $stmt->execute([$token]);
     $row = $stmt->fetch();
 
-    if (!$row) {
+    if (!$row)
+    {
         $msg = "Activation link invalid or expired.";
     }
-    else {
+    else
+    {
         $pdo->beginTransaction();
 
-        try {
+        try
+        {
             $pdo->prepare("
                 UPDATE users SET is_active = 1 WHERE id = ?
             ")->execute([$row['user_id']]);
@@ -40,7 +45,8 @@ else {
 
             $msg = "Account activated. You can now log in.";
         }
-        catch (Exception $e) {
+        catch (Exception $e)
+        {
             $pdo->rollBack();
             $msg = "Activation failed.";
         }
