@@ -11,15 +11,22 @@
 
     let allProducts = [];
 
-    // Cargar todos los productos al iniciar (sin usar query)
     fetch('/PAPI/Grupal-PAPI/api/search.php')
-      .then(r => r.json())
-      .then(data => {
-        allProducts = Array.isArray(data) ? data : [];
-        populateFilters(allProducts);
-        renderResults(allProducts);
-      })
-      .catch(err => console.error('DB Load error:', err));
+  .then(r => r.json())
+  .then(data => {
+    allProducts = Array.isArray(data) ? data : [];
+
+    // ← AÑADE ESTO
+    allProducts.forEach(p => {
+        if (typeof p.currentStock === 'undefined') {
+            p.currentStock = Number.isFinite(p.stock) ? p.stock : 0;
+        }
+    });
+
+    populateFilters(allProducts);
+    renderResults(allProducts);
+  })
+  .catch(err => console.error('DB Load error:', err));
 
     // SEARCH
     function search(query) {
